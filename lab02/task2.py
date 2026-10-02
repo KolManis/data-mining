@@ -77,19 +77,36 @@ def exact_groups(people, bal):
     return groups
 
 
+def find_zero_group(rest, bal):
+    """Ищет среди оставшихся пару или тройку участников с нулевой суммой балансов."""
+    position = {}
+    for i, name in enumerate(rest):
+        position.setdefault(bal[name], []).append(i)
+    for i, name in enumerate(rest):
+        for k in position.get(-bal[name], []):
+            if k != i:
+                return [name, rest[k]]
+    for i in range(len(rest)):
+        for j in range(i + 1, len(rest)):
+            need = -(bal[rest[i]] + bal[rest[j]])
+            for k in position.get(need, []):
+                if k != i and k != j:
+                    return [rest[i], rest[j], rest[k]]
+    return None
+
+
 def heuristic_groups(people, bal):
-    """Выделяет пары с противоположными балансами, остальных объединяет в одну группу."""
-    groups, rest = [], []
-    waiting = {}
-    for name in people:
-        partner = waiting.get(-bal[name])
-        if partner:
-            groups.append([partner.pop(), name])
-        else:
-            waiting.setdefault(bal[name], []).append(name)
-    for names in waiting.values():
-        rest.extend(names)
-    if rest:
+    """Последовательно выделяет пары и тройки с нулевой суммой, остальных объединяет в одну группу."""
+    groups, rest = [], list(people)
+    while len(rest) > EXACT_LIMIT:
+        group = find_zero_group(rest, bal)
+        if group is None:
+            break
+        groups.append(group)
+        rest = [name for name in rest if name not in group]
+    if len(rest) <= EXACT_LIMIT:
+        groups.extend(exact_groups(rest, bal))
+    elif rest:
         groups.append(rest)
     return groups
 
