@@ -1,0 +1,5 @@
+Ivan Aleksej Igor
+3
+Ivan 500
+Aleksej 100
+Ivan 200
